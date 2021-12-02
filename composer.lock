@@ -4,8 +4,77 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "250768337f1645adeff2900fe0654fe2",
+    "content-hash": "05bbba9de49a9e8efbc0e7f229ba20f2",
     "packages": [
+        {
+            "name": "analog/analog",
+            "version": "1.0.19-stable",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jbroadway/analog.git",
+                "reference": "53afd53b77bf911d926e5b895484a3fed3479aee"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jbroadway/analog/zipball/53afd53b77bf911d926e5b895484a3fed3479aee",
+                "reference": "53afd53b77bf911d926e5b895484a3fed3479aee",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2",
+                "psr/log": "^1.0.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^8.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Analog": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Johnny Broadway",
+                    "email": "johnny@johnnybroadway.com",
+                    "homepage": "http://www.johnnybroadway.com/"
+                }
+            ],
+            "description": "Fast, flexible, easy PSR-3-compatible PHP logging package with dozens of handlers.",
+            "homepage": "https://github.com/jbroadway/analog",
+            "keywords": [
+                "PSR3",
+                "alerts",
+                "amon",
+                "apprise",
+                "chrome-logger",
+                "console",
+                "debug",
+                "debugging",
+                "error",
+                "errors",
+                "firephp",
+                "gelf",
+                "log",
+                "logger",
+                "logging",
+                "logs",
+                "monitor",
+                "monitoring",
+                "psr-3",
+                "stderr",
+                "syslog"
+            ],
+            "support": {
+                "issues": "https://github.com/jbroadway/analog/issues",
+                "source": "https://github.com/jbroadway/analog/tree/1.0.19-stable"
+            },
+            "time": "2021-11-05T03:59:12+00:00"
+        },
         {
             "name": "myclabs/php-enum",
             "version": "1.8.3",

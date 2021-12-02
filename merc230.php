@@ -42,6 +42,7 @@ class Mercury230
         return $error;
     }
 
+
     public function get_meter() {
         $data = array();
         $meter = $this->send('0801');
@@ -60,6 +61,59 @@ class Mercury230
         return $data;
     }
 
+
+    public function get_moment() {
+        $data = array();
+
+        $resp = $this->send('0816A0');
+
+        // 3. Поле данных ответа в режиме чтения вспомогательных параметров:
+        // мощности P, Q, S по сумме фаз и фазам (36 байт);
+        // фазные напряжения (9 байт);
+        // углы между фазными напряжениями (9 байт);
+        // токи (9 байт);
+        // коэффициенты мощности по сумме фаз и фазам (12 байт);
+        // частота сети (3 байта);
+        // коэффициенты гармоник фазных напряжений (6 байт);
+        // температура внутри прибора (2 байта);
+        // межфазные значения (9 байт)*.
+        // * Возможная информация.
+
+        $info = array(
+            'Psum',
+            'P1',
+            'P2',
+            'P3',
+            'Qsum',
+            'Q1',
+            'Q2',
+            'Q3',
+            'Ssum',
+            'S1',
+            'S2',
+            'S3',
+            'U1',
+            'U2',
+            'U3',
+            'Fab',
+            'Fac',
+            'Fbc',
+            'I1',
+            'I2',
+            'I3',
+            'cFsum',
+            'cF1',
+            'cF2',
+            'cF3',
+            'Hz'
+        );
+
+        $data = $this->hexarr_dec( $resp, 6, 1 );
+
+        return array_combine($info, $data);
+    }
+
+
     public function get_stored() {
         $data = array();
 
@@ -77,72 +131,25 @@ class Mercury230
         // 00 - по сумме тарифов, 01-04 номер тарифа
         //
 
-        $t1 = $this->hex_arr($this->send('050001'));
-        $t2 = $this->hex_arr($this->send('050002'));
+        $tt = $this->hexarr_dec( $this->send('050000'), 8, 2 );
+        $t1 = $this->hexarr_dec( $this->send('050001'), 8, 2 );
+        $t2 = $this->hexarr_dec( $this->send('050002'), 8, 2 );
 
-        $data['t1'] = (hexdec($t1[1] . $t1[0] . $t1[3] . $t1[2])) * 0.001;
-        $data['t2'] = (hexdec($t2[1] . $t2[0] . $t2[3] . $t2[2])) * 0.001;
-        $data['total'] = $data['t1'] + $data['t2'];
+        $data['t1'] = $t1[0];
+        $data['t2'] = $t2[0];
+        $data['total'] = $tt[0];
 
-        $t1_day = $this->hex_arr($this->send('055001'));
-        $t2_day = $this->hex_arr($this->send('055002'));
+        $day_tt = $this->hexarr_dec( $this->send('055000'), 8, 2 );
+        $day_t1 = $this->hexarr_dec( $this->send('055001'), 8, 2 );
+        $day_t2 = $this->hexarr_dec( $this->send('055002'), 8, 2 );
 
-        $data['day_t1'] = (hexdec($t1_day[1] . $t1_day[0] . $t1_day[3] . $t1_day[2])) * 0.001;
-        $data['day_t2'] = (hexdec($t2_day[1] . $t2_day[0] . $t2_day[3] . $t2_day[2])) * 0.001;
-        $data['day_total'] = $data['day_t1'] + $data['day_t2'];
-
-        return $data;
-    }
-
-    public function get_moment()
-    {
-        $data = array();
-
-        //
-        // Мгновенные значения
-        // 08 - код запроса
-        // 11 (14, 16) № параметра
-        // 00 - BWRI:
-        //// 00 - мощность по всем фазам, 01-03 по фазам
-        //// 11 - напряжение 11-13 1-3 фазы
-        //// 21 - ток 21-23 1-3 фазы
-        //// 30 - коэф. мощности по сумме фаз
-        ///
-
-        // Напряжение по фазам
-        $now_volt = $this->hex_arr($this->send('081611'));
-
-        $data['volt'][1] = (hexdec($now_volt[2] . $now_volt[1])) * 0.01;
-        $data['volt'][2] = (hexdec($now_volt[5] . $now_volt[4])) * 0.01;
-        $data['volt'][3] = (hexdec($now_volt[8] . $now_volt[7])) * 0.01;
-
-        // Ток по фазам
-        $now_amp = $this->hex_arr($this->send('081621'));
-
-        $data['amp'][1] = (hexdec($now_amp[2] . $now_amp[1])) * 0.001;
-        $data['amp'][2] = (hexdec($now_amp[5] . $now_amp[4])) * 0.001;
-        $data['amp'][3] = (hexdec($now_amp[8] . $now_amp[7])) * 0.001;
-
-        // Мощность по фазам
-        $now_watt = $this->hex_arr($this->send('081600'));
-
-        $data['watt'][1] = (hexdec(substr($now_watt[3], 1, 1) . $now_watt[5] . $now_watt[4])) * 0.01;
-        $data['watt'][2] = (hexdec(substr($now_watt[6], 1, 1) . $now_watt[8] . $now_watt[7])) * 0.01;
-        $data['watt'][3] = (hexdec(substr($now_watt[9], 1, 1) . $now_watt[11] . $now_watt[10])) * 0.01;
-        $data['watt']['total'] = (hexdec(substr($now_watt[0], 1, 1) . $now_watt[2] . $now_watt[1])) * 0.01;
-
-        // Данные по мощности непонятно как считываются, на всякий случай математически рассчитанные показатели
-        $data['watt']['m1'] = round($data['amp'][1] * $data['volt'][1], 2);
-        $data['watt']['m2'] = round($data['amp'][2] * $data['volt'][2], 2);
-        $data['watt']['m3'] = round($data['amp'][3] * $data['volt'][3], 2);
-        $data['watt']['mtotal'] = round($data['watt']['m1'] + $data['watt']['m2'] + $data['watt']['m3'], 2);
-
-        // Частота
-        $now_hertz = $this->hex_arr($this->send('081140'));
-        $data['hertz'] = (hexdec( $now_hertz[2] . $now_hertz[1] )) * 0.01;
+        $data['day_t1'] = $day_t1[0];
+        $data['day_t2'] = $day_t2[0];
+        $data['day_total'] = $day_tt[0];
 
         return $data;
     }
+
 
     public function send( $code, $full = false )
     {
@@ -221,6 +228,7 @@ class Mercury230
         return $result;
     }
 
+
     public function close()
     {
         $resp = $this->send('02');
@@ -230,15 +238,41 @@ class Mercury230
         return $result;
     }
 
+
+    private function hexarr_dec( $str, $bytes = 2, $v = 1 ) {
+        $data = array();
+        $arr = array_map(null, str_split($str, $bytes));
+
+        if ($v === 1) {
+            foreach ($arr as $a) {
+                $str = "0" . $a[1] . substr($a, 4,  2) . substr($a, 2,  2);
+                $data[] = hexdec($str);
+            }
+        }
+        elseif ($v === 2) {
+            foreach ($arr as $a) {
+                if (strpos($a, 'ffff') === false) {
+                    $str = substr($a, 2,  2) . substr($a, 0,  2) . substr($a, 6,  2) . substr($a, 4,  2);
+                    $data[] = hexdec($str);
+                }
+            }
+        }
+
+        return $data;
+    }
+
+
     private function hex_arr($h) {
         return array_map(null, str_split($h, 2));
     }
+
 
     // Format input string as nice hex
     public function nice_hex( $str ) {
         $res = substr($str, 2, -4);
         return strtoupper( implode(' ', str_split($res, 2)) );
     }
+
 
     // Calculate modbus crc 16
     function crc16_modbus( $string ) {
