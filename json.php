@@ -1,15 +1,13 @@
 <?php
 
+require __DIR__ . '/app.php';
+
 header('Content-type: application/json');
-
-require __DIR__ . '/merc230.php';
-
-$meter = new Mercury230('tcp://192.168.1.40', 5000, 73);
 
 $tcp = $meter->open();
 $result = array();
 
-if( isset( $_GET['now'] ) ) {
+if( isset( $_GET['moment'] ) ) {
 
     $result = $meter->get_moment();
 
@@ -21,6 +19,8 @@ if( isset( $_GET['now'] ) ) {
     $result['moment'] = $meter->get_moment();
 
 }
+
+$result['time'] = date('c');
 
 $meter->close();
 

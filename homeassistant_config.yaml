@@ -1,0 +1,106 @@
+sensor:
+    - platform: mqtt
+      name: "Energy T1"
+      state_topic: "homeassistant/sensor/energy/stored"
+      device_class: energy
+      unit_of_measurement: "kWh"
+      value_template: "{{ (value_json.t1 | int * 0.001) | round(2) }}"
+    - platform: mqtt
+      name: "Energy T2"
+      state_topic: "homeassistant/sensor/energy/stored"
+      device_class: energy
+      unit_of_measurement: "kWh"
+      value_template: "{{ (value_json.t2 | int * 0.001) | round(2) }}"
+    - platform: mqtt
+      name: "Energy Total"
+      state_topic: "homeassistant/sensor/energy/stored"
+      device_class: energy
+      unit_of_measurement: "kWh"
+      value_template: "{{ (value_json.total | int * 0.001) | round(2) }}"
+    - platform: mqtt
+      name: "Energy Day T1"
+      state_topic: "homeassistant/sensor/energy/stored"
+      device_class: energy
+      unit_of_measurement: "kWh"
+      value_template: "{{ (value_json.day_t1 | int * 0.001) | round(2) }}"
+    - platform: mqtt
+      name: "Energy Day T2"
+      state_topic: "homeassistant/sensor/energy/stored"
+      device_class: energy
+      unit_of_measurement: "kWh"
+      value_template: "{{ (value_json.day_t2 | int * 0.001) | round(2) }}"
+    - platform: mqtt
+      name: "Energy Day Total"
+      state_topic: "homeassistant/sensor/energy/stored"
+      device_class: energy
+      unit_of_measurement: "kWh"
+      value_template: "{{ (value_json.day_total | int * 0.001) | round(2) }}"
+      
+    - platform: mqtt
+      name: "Energy Volt 1"
+      state_topic: "homeassistant/sensor/energy/moment"
+      device_class: voltage
+      unit_of_measurement: "V"
+      value_template: "{{ (value_json.U1 | int * 0.01) | round(2) }}"
+    - platform: mqtt
+      name: "Energy Volt 2"
+      state_topic: "homeassistant/sensor/energy/moment"
+      device_class: voltage
+      unit_of_measurement: "V"
+      value_template: "{{ (value_json.U2 | int * 0.01) | round(2) }}"
+    - platform: mqtt
+      name: "Energy Volt 3"
+      state_topic: "homeassistant/sensor/energy/moment"
+      device_class: voltage
+      unit_of_measurement: "V"
+      value_template: "{{ (value_json.U3 | int * 0.01) | round(2) }}"
+      
+    - platform: mqtt
+      name: "Energy Watt 1"
+      state_topic: "homeassistant/sensor/energy/moment"
+      device_class: power
+      unit_of_measurement: "W"
+      value_template: "{{ (value_json.S1 | int * 0.01) | round(2) }}"
+    - platform: mqtt
+      name: "Energy Watt 2"
+      state_topic: "homeassistant/sensor/energy/moment"
+      device_class: power
+      unit_of_measurement: "W"
+      value_template: "{{ (value_json.S2 | int * 0.01) | round(2) }}"
+    - platform: mqtt
+      name: "Energy Watt 3"
+      state_topic: "homeassistant/sensor/energy/moment"
+      device_class: power
+      unit_of_measurement: "W"
+      value_template: "{{ (value_json.S3 | int * 0.01) | round(2) }}"
+    - platform: mqtt
+      name: "Energy Watt Total"
+      state_topic: "homeassistant/sensor/energy/moment"
+      device_class: power
+      unit_of_measurement: "W"
+      value_template: "{{ (value_json.Ssum | int * 0.01) | round(2) }}"
+      
+    - platform: mqtt
+      name: "Energy Current 1"
+      state_topic: "homeassistant/sensor/energy/moment"
+      device_class: current
+      unit_of_measurement: "A"
+      value_template: "{{ (value_json.I1 | int * 0.001) | round(2) }}"
+    - platform: mqtt
+      name: "Energy Current 2"
+      state_topic: "homeassistant/sensor/energy/moment"
+      device_class: current
+      unit_of_measurement: "A"
+      value_template: "{{ (value_json.I2 | int * 0.001) | round(2) }}"
+    - platform: mqtt
+      name: "Energy Current 3"
+      state_topic: "homeassistant/sensor/energy/moment"
+      device_class: current
+      unit_of_measurement: "A"
+      value_template: "{{ (value_json.I3 | int * 0.001) | round(2) }}"
+      
+    - platform: mqtt
+      name: "Energy Frequency"
+      state_topic: "homeassistant/sensor/energy/moment"
+      unit_of_measurement: "Hz"
+      value_template: "{{ value_json.Hz | int * 0.01 }}"
