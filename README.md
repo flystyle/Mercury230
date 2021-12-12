@@ -54,12 +54,12 @@ moment values every 10 minutes
 
 stored values once a day
 ```sh
-0 0 * * *    root   /usr/bin/php /var/www/smart.home/public/energy/mqtt.php stored
+11 0 * * *    root   /usr/bin/php /var/www/smart.home/public/energy/mqtt.php stored
 ```
 
 It's also possible to use wget to run the script:
 ```sh
-0 0 * * *    root   /usr/bin/wget -O- http://smart.home/energy/mqtt.php?mode=stored >> /dev/null
+11 0 * * *    root   /usr/bin/wget -O- http://smart.home/energy/mqtt.php?mode=stored >> /dev/null
 ```
 
 After that you can add sensors to your Home Assistant configuration.yaml
