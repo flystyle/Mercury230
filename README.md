@@ -59,7 +59,7 @@ stored values once a day
 
 It's also possible to use wget to run the script:
 ```sh
-0 0 * * *    root   /usr/bin/wget wget -O- http://smart.home/energy/mqtt.php?mode=stored >> /dev/null
+0 0 * * *    root   /usr/bin/wget -O- http://smart.home/energy/mqtt.php?mode=stored >> /dev/null
 ```
 
 After that you can add sensors to your Home Assistant configuration.yaml
