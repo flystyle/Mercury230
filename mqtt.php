@@ -18,11 +18,12 @@ if ($cfg['debug']) {
 }
 
 
-if (defined('STDIN')) {
+if (!empty($argv[1])) {
     $mode = $argv[1];
 } else {
     $mode = $_GET['mode'];
 }
+
 
 $meter->open();
 
@@ -59,9 +60,8 @@ try {
     }
 
     if ($mode === 'stored') {
-        $client->publish('homeassistant/sensor/energy/stored', json_encode($stored), MqttClient::QOS_AT_LEAST_ONCE);
-    } elseif ($mode === 'meter') {
         $client->publish('homeassistant/sensor/energy/meter', json_encode($info), MqttClient::QOS_AT_MOST_ONCE);
+        $client->publish('homeassistant/sensor/energy/stored', json_encode($stored), MqttClient::QOS_AT_LEAST_ONCE);
     } else {
         $client->publish('homeassistant/sensor/energy/moment', json_encode($moment), MqttClient::QOS_AT_LEAST_ONCE);
     }

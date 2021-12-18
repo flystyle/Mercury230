@@ -14,6 +14,7 @@ class Mercury230
         $this->port = $port;
         $this->addr = dechex($addr);
         $this->sock = false;
+        $this->lock = fopen(__DIR__ . '/run.lock', 'c');
     }
 
     // Check connection
@@ -216,16 +217,34 @@ class Mercury230
     {
         $this->sock = fsockopen($this->host, $this->port, $errno, $errstr, $this->timeout);
 
-        if ( $this->sock === false ) {
+        if ($this->sock === false) {
             die("Couldn't create socket: [$errno] $errstr");
         }
 
-        // Аутентификация по первому уровню доступа
-        $resp = $this->send('0101010101010101');
-        $resp = intval($resp);
-        $result = ( $resp === 0 ) ? 'OK' : 'FAIL: ' . $resp;
+        $lock = true;
+        $count = 0;
 
-        return $result;
+        while (!flock($this->lock, LOCK_EX | LOCK_NB, $wb)) {
+            if ($wb && $count++ < 15) {
+                sleep(1);
+            } else {
+                $lock = false;
+                break;
+            }
+        }
+
+        // if (!$lock) {
+            // flock($this->lock, LOCK_EX | LOCK_NB);
+
+            // Аутентификация по первому уровню доступа
+            $resp = $this->send('0101010101010101');
+            $resp = intval($resp);
+            $result = ( $resp === 0 ) ? 'OK' : 'FAIL: ' . $resp;
+
+            return $result;
+        // } else {
+        //     return 'FAIL: LOCK';
+        // }
     }
 
 
@@ -234,6 +253,8 @@ class Mercury230
         $resp = $this->send('02');
         $result = ( $resp === '00' ) ? 'OK' : 'FAIL';
         fclose($this->sock);
+        flock($this->lock, LOCK_UN);
+        fclose($this->lock);
 
         return $result;
     }
