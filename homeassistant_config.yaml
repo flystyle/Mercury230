@@ -4,18 +4,21 @@ sensor:
       state_topic: "homeassistant/sensor/energy/stored"
       device_class: energy
       unit_of_measurement: "kWh"
+      state_class: total_increasing
       value_template: "{{ (value_json.t1 | int * 0.001) | round(2) }}"
     - platform: mqtt
       name: "Energy T2"
       state_topic: "homeassistant/sensor/energy/stored"
       device_class: energy
       unit_of_measurement: "kWh"
+      state_class: total_increasing
       value_template: "{{ (value_json.t2 | int * 0.001) | round(2) }}"
     - platform: mqtt
       name: "Energy Total"
       state_topic: "homeassistant/sensor/energy/stored"
       device_class: energy
       unit_of_measurement: "kWh"
+      state_class: total_increasing
       value_template: "{{ (value_json.total | int * 0.001) | round(2) }}"
     - platform: mqtt
       name: "Energy Day T1"
@@ -35,7 +38,7 @@ sensor:
       device_class: energy
       unit_of_measurement: "kWh"
       value_template: "{{ (value_json.day_total | int * 0.001) | round(2) }}"
-      
+
     - platform: mqtt
       name: "Energy Volt 1"
       state_topic: "homeassistant/sensor/energy/moment"
@@ -54,7 +57,7 @@ sensor:
       device_class: voltage
       unit_of_measurement: "V"
       value_template: "{{ (value_json.U3 | int * 0.01) | round(2) }}"
-      
+
     - platform: mqtt
       name: "Energy Watt 1"
       state_topic: "homeassistant/sensor/energy/moment"
@@ -79,7 +82,7 @@ sensor:
       device_class: power
       unit_of_measurement: "W"
       value_template: "{{ (value_json.Ssum | int * 0.01) | round(2) }}"
-      
+
     - platform: mqtt
       name: "Energy Current 1"
       state_topic: "homeassistant/sensor/energy/moment"
@@ -98,7 +101,7 @@ sensor:
       device_class: current
       unit_of_measurement: "A"
       value_template: "{{ (value_json.I3 | int * 0.001) | round(2) }}"
-      
+
     - platform: mqtt
       name: "Energy Frequency"
       state_topic: "homeassistant/sensor/energy/moment"

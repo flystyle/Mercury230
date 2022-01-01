@@ -6,7 +6,7 @@ class Mercury230
     public $host;
     public $port;
     public $addr;
-    public $timeout = 3;
+    public $timeout = 5;
 
     function __construct( $host, $port, $addr )
     {
@@ -14,6 +14,8 @@ class Mercury230
         $this->port = $port;
         $this->addr = dechex($addr);
         $this->sock = false;
+        $this->error = false;
+        $this->message = '';
         $this->lock = fopen(__DIR__ . '/run.lock', 'c');
     }
 
@@ -65,6 +67,7 @@ class Mercury230
 
     public function get_moment() {
         $data = array();
+        $result = '';
 
         $resp = $this->send('0816A0');
 
@@ -109,9 +112,18 @@ class Mercury230
             'Hz'
         );
 
-        $data = $this->hexarr_dec( $resp, 6, 1 );
+        if ( $this->error ) {
+            $result['error'] = true;
+            $result['err_msg'] = $this->message;
+        }
 
-        return array_combine($info, $data);
+        if ( !empty($resp) ) {
+            $data = $this->hexarr_dec( $resp, 6, 1 );
+            $result = array_combine($info, $data);
+        }
+
+        return $result;
+
     }
 
 
@@ -132,21 +144,34 @@ class Mercury230
         // 00 - по сумме тарифов, 01-04 номер тарифа
         //
 
-        $tt = $this->hexarr_dec( $this->send('050000'), 8, 2 );
-        $t1 = $this->hexarr_dec( $this->send('050001'), 8, 2 );
-        $t2 = $this->hexarr_dec( $this->send('050002'), 8, 2 );
+        $send = array(
+            't1' => '050001',
+            't2' => '050002',
+            'total' => '050000',
+            'day_t1' => '054001',
+            'day_t2' => '054002',
+            'day_total' => '054000',
+        );
 
-        $data['t1'] = $t1[0];
-        $data['t2'] = $t2[0];
-        $data['total'] = $tt[0];
+        foreach ( $send as $key => $cmd ) {
 
-        $day_tt = $this->hexarr_dec( $this->send('055000'), 8, 2 );
-        $day_t1 = $this->hexarr_dec( $this->send('055001'), 8, 2 );
-        $day_t2 = $this->hexarr_dec( $this->send('055002'), 8, 2 );
+            $resp = $this->send($cmd);
 
-        $data['day_t1'] = $day_t1[0];
-        $data['day_t2'] = $day_t2[0];
-        $data['day_total'] = $day_tt[0];
+            if ( !empty($resp) ) {
+                $value = $this->hexarr_dec( $resp, 8, 2 );
+
+                if ( is_numeric($value[0]) ) {
+                    $data[$key] = $value[0];
+                }
+            }
+
+            sleep(1);
+        }
+
+        if ( $this->error ) {
+            $data['error'] = true;
+            $data['err_msg'] = $this->message;
+        }
 
         return $data;
     }
@@ -154,9 +179,17 @@ class Mercury230
 
     public function send( $code, $full = false )
     {
+        $this->error = false;
+        $this->message = '';
 
         if ( $this->sock === false ) {
             die('Error: Connection failed');
+        }
+
+        if ( empty($code) ) {
+            $this->error = true;
+            $this->message = 'Empty code';
+            exit();
         }
 
         $cmd = $this->addr . $code;
@@ -182,31 +215,43 @@ class Mercury230
         }
 
         $result = bin2hex( $result );
+        $crc = substr($result, -4);
 
-        if ( $full === false ) {
-            $result = substr($result, 2, -4);
+        // Check CRC
+        $crc16 = $this->crc16_modbus( hex2bin(substr($result, 0, -4)) );
+        $crc16 = bin2hex($crc16);
+
+        if ( $crc16 !== $crc ) {
+            $this->error = true;
+            $this->message = 'CRC Error';
+            exit();
         }
 
         if ( strlen($result) < 4 ) {
+            $this->error = true;
             $err = hexdec( substr($result, 0, 2) );
 
             switch ($err) {
                 case '01':
-                    $result = 'Ошибка: Недопустимая команда или параметр';
+                    $this->message = 'Ошибка: Недопустимая команда или параметр';
                     break;
                 case '02':
-                    $result = 'Ошибка: Внутренняя ошибка счетчика';
+                    $this->message = 'Ошибка: Внутренняя ошибка счетчика';
                     break;
                 case '03':
-                    $result = 'Ошибка: Недостаточен уровень доступа для выполнения запроса';
+                    $this->message = 'Ошибка: Недостаточен уровень доступа для выполнения запроса';
                     break;
                 case '04':
-                    $result = 'Ошибка: Внутренние часы счетчика уже корректировались в течение текущих суток';
+                    $this->message = 'Ошибка: Внутренние часы счетчика уже корректировались в течение текущих суток';
                     break;
                 case '05':
-                    $result = 'Ошибка: Не открыт канал связи';
+                    $this->message = 'Ошибка: Не открыт канал связи';
                     break;
             }
+        }
+
+        if ( $full === false ) {
+            $result = substr($result, 2, -4);
         }
 
         return $result;
@@ -225,7 +270,7 @@ class Mercury230
         $count = 0;
 
         while (!flock($this->lock, LOCK_EX | LOCK_NB, $wb)) {
-            if ($wb && $count++ < 15) {
+            if ($wb && $count++ < $this->timeout) {
                 sleep(1);
             } else {
                 $lock = false;
@@ -233,18 +278,16 @@ class Mercury230
             }
         }
 
-        // if (!$lock) {
-            // flock($this->lock, LOCK_EX | LOCK_NB);
-
+        if ($lock) {
             // Аутентификация по первому уровню доступа
             $resp = $this->send('0101010101010101');
             $resp = intval($resp);
             $result = ( $resp === 0 ) ? 'OK' : 'FAIL: ' . $resp;
 
             return $result;
-        // } else {
-        //     return 'FAIL: LOCK';
-        // }
+        } else {
+            return 'FAIL: run.lock timeout';
+        }
     }
 
 
@@ -261,6 +304,9 @@ class Mercury230
 
 
     private function hexarr_dec( $str, $bytes = 2, $v = 1 ) {
+        if ( empty($str) )
+            exit();
+
         $data = array();
         $arr = array_map(null, str_split($str, $bytes));
 

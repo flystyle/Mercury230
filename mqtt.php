@@ -20,7 +20,7 @@ if ($cfg['debug']) {
 
 if (!empty($argv[1])) {
     $mode = $argv[1];
-} else {
+} elseif (isset($_GET['mode'])) {
     $mode = $_GET['mode'];
 }
 
@@ -60,10 +60,27 @@ try {
     }
 
     if ($mode === 'stored') {
+
         $client->publish('homeassistant/sensor/energy/meter', json_encode($info), MqttClient::QOS_AT_MOST_ONCE);
-        $client->publish('homeassistant/sensor/energy/stored', json_encode($stored), MqttClient::QOS_AT_LEAST_ONCE);
+
+        if ( is_numeric($stored['t1']) && $stored['t1'] > 0 ) {
+            $client->publish('homeassistant/sensor/energy/stored', json_encode($stored), MqttClient::QOS_AT_LEAST_ONCE);
+        } else {
+            $client->publish('homeassistant/sensor/energy/status', 'offline', MqttClient::QOS_AT_LEAST_ONCE);
+        }
+
+    } elseif ($mode === 'status') {
+
+        $client->publish('homeassistant/sensor/energy/status', 'online', MqttClient::QOS_AT_LEAST_ONCE);
+
     } else {
-        $client->publish('homeassistant/sensor/energy/moment', json_encode($moment), MqttClient::QOS_AT_LEAST_ONCE);
+
+        if ( is_numeric($moment['U1']) && $moment['U1'] > 0 ) {
+            $client->publish('homeassistant/sensor/energy/moment', json_encode($moment), MqttClient::QOS_AT_LEAST_ONCE);
+        } else {
+            $client->publish('homeassistant/sensor/energy/status', 'offline', MqttClient::QOS_AT_LEAST_ONCE);
+        }
+
     }
 
     $client->disconnect();
